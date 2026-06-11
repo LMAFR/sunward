@@ -98,7 +98,7 @@ await page.screenshot({ path: "scripts/smoke-outskirts.png" });
 // east along the road, up the stairs onto the terrace, into the shrine
 await step("ArrowDown", 6); // (9,1) -> (9,7) on the crossroads
 await step("ArrowRight", 7); // -> stairs (13,7) -> terrace (16,7)
-await step("ArrowUp", 3); // -> shrine door (16,4), triggers transition
+await step("ArrowUp", 4); // -> shrine door (16,3), triggers transition
 await page.waitForTimeout(800);
 const shrineId = await state.mapId();
 if (shrineId !== "aurin-shrine")

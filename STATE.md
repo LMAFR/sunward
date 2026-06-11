@@ -40,17 +40,30 @@ right); NPCs are the tinted `NPC_test.png` template — distinct colors,
 but bald placeholder figures. Seal crystal remains original generated
 art. Public server on :4173 serves `dist/` — rebuild to publish.
 
+## Puzzle/terrain layer (added fourth iteration, 2026-06-11)
+
+Tile ids 8 (barred gate), 9 (stairs, generated art), 10 (cliff face),
+11 (pressure plate, generated). Maps may declare `blocks` (pushable) and
+`puzzle: {plates, gates, solvedFlag}` — covering all plates flips gate
+tiles to floor and sets the flag (gates start open if flag already set).
+Map data is structuredClone'd per scene create because puzzles mutate
+tiles. Outskirts has a cliff terrace + stairs; the shrine is a two-room
+dungeon (block trial gates the inner sanctum). Smoke test covers the
+whole walk including the puzzle.
+
+User feedback fixed this iteration: hero left/right walk rows were
+swapped (moonwalk); dialogue box now depth 10000 + paginates long text
+(3 wrapped lines per page).
+
 ## Next up (in order)
 
-1. Per-character NPC look: either recolored character-sheet variants
-   (hair/clothes palette swap at load time) or hand-picked sprites from
-   another CC0 pack; NPC facing toward the player when talked to.
-2. Act 1 closing beat: departure scene (talk to all three companions
-   after the breach → flag `act1_complete` → narration at the south
-   gate). Cheap, pure data + maybe one engine touch.
-3. Interiors via `Inner.png` (already in the pack) — house/shrine inside
-   maps behind the arched doors.
-4. Battle system design doc before any battle code (elements, Kindred).
+1. Battle system design doc, then implementation (elements, Kindred) —
+   user explicitly wants monsters in the shrine.
+2. Per-character NPC look (palette-swapped character sheets) + NPCs
+   face the player when addressed.
+3. Act 1 closing beat: departure scene after the breach.
+4. Interiors via `Inner.png` (house/shrine inner rooms); richer cliff
+   edges (grass-top cap tiles) for the terraces.
 
 ## Decisions made
 

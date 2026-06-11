@@ -23,6 +23,19 @@ export interface MapData {
   blocks?: Point[];
   /** Block-on-plate puzzle: cover all plates to open all gates. */
   puzzle?: PuzzleData;
+  /** Decorative multi-tile structures drawn from the overworld sheet. */
+  props?: PropData[];
+}
+
+export interface PropData {
+  /** Source rect on the overworld sheet: [x, y, width, height] pixels. */
+  sheet: [number, number, number, number];
+  /** Top-left tile position in the map. */
+  x: number;
+  y: number;
+  /** Optional pixel nudge. */
+  dx?: number;
+  dy?: number;
 }
 
 export interface Point {

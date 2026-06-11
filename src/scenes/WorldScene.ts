@@ -12,7 +12,8 @@ import {
   HERO_WALK,
   PLATE_TILE,
   SEAL_TILE,
-  STAIRS_TILE,
+  STAIRS_H_TILE,
+  STAIRS_V_TILE,
   TILE_FRAMES,
   TILE_SIZE,
   TREE_TILE,
@@ -114,12 +115,35 @@ export class WorldScene extends Phaser.Scene {
             .image(x * TILE_SIZE, y * TILE_SIZE, "seal_crystal")
             .setOrigin(0, 0)
             .setDepth(y * TILE_SIZE);
-        } else if (id === STAIRS_TILE) {
-          this.add.image(x * TILE_SIZE, y * TILE_SIZE, "stairs").setOrigin(0, 0);
+        } else if (id === STAIRS_H_TILE) {
+          this.add
+            .image(x * TILE_SIZE, y * TILE_SIZE, "stairs_h")
+            .setOrigin(0, 0);
+        } else if (id === STAIRS_V_TILE) {
+          this.add
+            .image(x * TILE_SIZE, y * TILE_SIZE, "stairs_v")
+            .setOrigin(0, 0);
         } else if (id === PLATE_TILE) {
           this.add.image(x * TILE_SIZE, y * TILE_SIZE, "plate").setOrigin(0, 0);
         }
       }
+    }
+
+    // decorative props (multi-tile structures from the sheet)
+    const overworld = this.textures.get("overworld");
+    for (const [i, p] of (this.map.props ?? []).entries()) {
+      const key = `prop_${this.mapId}_${i}`;
+      const [sx, sy, w, h] = p.sheet;
+      if (!overworld.has(key)) overworld.add(key, 0, sx, sy, w, h);
+      this.add
+        .image(
+          p.x * TILE_SIZE + (p.dx ?? 0),
+          p.y * TILE_SIZE + (p.dy ?? 0),
+          "overworld",
+          key
+        )
+        .setOrigin(0, 0)
+        .setDepth(p.y * TILE_SIZE + h - TILE_SIZE);
     }
 
     // pushable blocks

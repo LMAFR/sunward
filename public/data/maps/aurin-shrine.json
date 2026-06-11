@@ -29,6 +29,10 @@
     [4,1,1,1,1,1,1,1,1,1,1,1,1,4],
     [4,4,4,4,4,4,4,1,4,4,4,4,4,4]
   ],
+  "props": [
+    { "sheet": [128, 496, 40, 48], "x": 4, "y": 8, "dx": 4 },
+    { "sheet": [128, 496, 40, 48], "x": 8, "y": 8, "dx": 4 }
+  ],
   "blocks": [{ "x": 5, "y": 13 }],
   "puzzle": {
     "plates": [{ "x": 3, "y": 13 }],
@@ -46,7 +50,7 @@
     }
   ],
   "triggers": [
-    { "x": 7, "y": 21, "target": "aldera-outskirts", "targetX": 16, "targetY": 5 }
+    { "x": 7, "y": 21, "target": "aldera-outskirts", "targetX": 16, "targetY": 4 }
   ],
   "onEnter": [
     { "unless": ["shrine_seen"], "dialogueId": "seal_broken", "set": ["shrine_seen", "shrine_breached"] }

@@ -20,15 +20,17 @@ export const TILE_FRAMES: Record<number, number> = {
   6: f(25, 3), // arched doorway
   7: f(13, 15), // seal: cobble base, crystal drawn on top
   8: f(25, 1), // barred gate (solid until opened)
-  9: f(13, 15), // stairs: cobble base, generated steps drawn on top
+  9: f(13, 15), // stairs ascending east-west: cobble base + generated steps
   10: f(5, 13), // cliff face
   11: f(13, 15), // pressure plate: cobble base, generated plate on top
+  12: f(13, 15), // stairs ascending north-south: cobble base + generated steps
 };
 
 export const TREE_TILE = 3;
 export const SEAL_TILE = 7;
-export const STAIRS_TILE = 9;
+export const STAIRS_H_TILE = 9;
 export const PLATE_TILE = 11;
+export const STAIRS_V_TILE = 12;
 /** Tile id that opened gates turn into. */
 export const FLOOR_TILE = 1;
 
@@ -74,17 +76,35 @@ export function setupDerivedTextures(scene: Phaser.Scene): void {
     g.destroy();
   }
 
-  // stone steps (original): four treads with darker risers
-  if (!scene.textures.exists("stairs")) {
+  // stone steps (original). Risers run perpendicular to the climb:
+  // stairs_h climbs east-west (vertical risers), stairs_v north-south.
+  if (!scene.textures.exists("stairs_h")) {
     const g = scene.add.graphics();
-    g.fillStyle(0xa8a098);
-    g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-    g.fillStyle(0x6a625a);
-    for (let i = 0; i < 4; i++) g.fillRect(0, i * 4 + 3, TILE_SIZE, 1);
-    g.fillStyle(0x8a827a);
+    for (let i = 0; i < 4; i++) {
+      // each step slightly lighter toward the top of the climb (east)
+      g.fillStyle([0x8a8278, 0x9a9288, 0xaaa298, 0xbab2a8][i]);
+      g.fillRect(i * 4, 0, 4, TILE_SIZE);
+      g.fillStyle(0x5a544c);
+      g.fillRect(i * 4, 0, 1, TILE_SIZE);
+    }
+    g.fillStyle(0x4a443c);
+    g.fillRect(0, 0, TILE_SIZE, 1);
+    g.fillRect(0, 15, TILE_SIZE, 1);
+    g.generateTexture("stairs_h", TILE_SIZE, TILE_SIZE);
+    g.destroy();
+  }
+  if (!scene.textures.exists("stairs_v")) {
+    const g = scene.add.graphics();
+    for (let i = 0; i < 4; i++) {
+      g.fillStyle([0xbab2a8, 0xaaa298, 0x9a9288, 0x8a8278][i]);
+      g.fillRect(0, i * 4, TILE_SIZE, 4);
+      g.fillStyle(0x5a544c);
+      g.fillRect(0, i * 4, TILE_SIZE, 1);
+    }
+    g.fillStyle(0x4a443c);
     g.fillRect(0, 0, 1, TILE_SIZE);
     g.fillRect(15, 0, 1, TILE_SIZE);
-    g.generateTexture("stairs", TILE_SIZE, TILE_SIZE);
+    g.generateTexture("stairs_v", TILE_SIZE, TILE_SIZE);
     g.destroy();
   }
 
