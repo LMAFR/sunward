@@ -19,6 +19,22 @@ export interface MapData {
   triggers?: TriggerData[];
   /** Scripted dialogue on entering the map; first matching event runs. */
   onEnter?: OnEnterEvent[];
+  /** Pushable blocks (walk into one to shove it a tile). */
+  blocks?: Point[];
+  /** Block-on-plate puzzle: cover all plates to open all gates. */
+  puzzle?: PuzzleData;
+}
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface PuzzleData {
+  plates: Point[];
+  gates: Point[];
+  /** Story flag set when solved; gates start open if it is already set. */
+  solvedFlag?: string;
 }
 
 export interface NpcData {

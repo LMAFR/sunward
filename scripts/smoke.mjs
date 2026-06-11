@@ -95,6 +95,27 @@ if (mapId !== "aldera-outskirts")
   await fail(`expected map aldera-outskirts — got ${mapId}`);
 await page.screenshot({ path: "scripts/smoke-outskirts.png" });
 
+// east along the road, up the stairs onto the terrace, into the shrine
+await step("ArrowDown", 6); // (9,1) -> (9,7) on the crossroads
+await step("ArrowRight", 7); // -> stairs (13,7) -> terrace (16,7)
+await step("ArrowUp", 3); // -> shrine door (16,4), triggers transition
+await page.waitForTimeout(800);
+const shrineId = await state.mapId();
+if (shrineId !== "aurin-shrine")
+  await fail(`expected map aurin-shrine — got ${shrineId}`);
+await clearDialogue(); // breach narration
+
+// the puzzle: push the block at (5,13) left onto the plate at (3,13)
+await step("ArrowUp", 7); // (7,20) -> (7,13)
+await step("ArrowLeft", 1); // -> (6,13)
+await step("ArrowLeft", 1); // push: block -> (4,13), player stays
+await step("ArrowLeft", 1); // -> (5,13)
+await step("ArrowLeft", 1); // push: block -> plate (3,13), gate opens
+await page.waitForTimeout(600);
+const gateTile = await page.evaluate(() => window.__sunward.tileAt(7, 10));
+if (gateTile !== 1) await fail(`gate did not open — tile is ${gateTile}`);
+await page.screenshot({ path: "scripts/smoke-shrine.png" });
+
 await browser.close();
 
 if (errors.length) {

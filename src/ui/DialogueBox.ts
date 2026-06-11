@@ -1,21 +1,23 @@
 import Phaser from "phaser";
 
-const BOX_HEIGHT = 48;
+const BOX_HEIGHT = 60;
 const PADDING = 8;
+const LINES_PER_PAGE = 3;
 const CHARS_PER_TICK = 1;
 const TICK_MS = 25;
 
 /**
- * GS-style bottom dialogue box with typewriter text.
- * Advance with the interact key; onComplete fires after the last line.
+ * GS-style bottom dialogue box with typewriter text. Long lines are
+ * paginated to LINES_PER_PAGE wrapped lines per page. Advance with the
+ * interact key; onComplete fires after the last page.
  */
 export class DialogueBox {
   private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private nameText: Phaser.GameObjects.Text;
   private bodyText: Phaser.GameObjects.Text;
-  private lines: { speaker: string; text: string }[] = [];
-  private lineIndex = 0;
+  private pages: { speaker: string; text: string }[] = [];
+  private pageIndex = 0;
   private charIndex = 0;
   private typing = false;
   private timer?: Phaser.Time.TimerEvent;
@@ -53,49 +55,60 @@ export class DialogueBox {
       this.bodyText,
     ]);
     this.container.setScrollFactor(0);
-    this.container.setDepth(100);
+    // above every world object (actors/canopies sort by pixel y)
+    this.container.setDepth(10000);
     this.container.setVisible(false);
   }
 
   start(lines: { speaker: string; text: string }[], onComplete?: () => void) {
     if (lines.length === 0) return;
-    this.lines = lines;
-    this.lineIndex = 0;
+    // paginate: wrap each line, then split into pages of LINES_PER_PAGE
+    this.pages = [];
+    for (const line of lines) {
+      const wrapped = this.bodyText.getWrappedText(line.text);
+      for (let i = 0; i < wrapped.length; i += LINES_PER_PAGE) {
+        this.pages.push({
+          speaker: line.speaker,
+          text: wrapped.slice(i, i + LINES_PER_PAGE).join("\n"),
+        });
+      }
+    }
+    this.pageIndex = 0;
     this.onComplete = onComplete;
     this.container.setVisible(true);
-    this.showLine();
+    this.showPage();
   }
 
-  /** Interact pressed while box is open: finish typing, or advance line. */
+  /** Interact pressed while box is open: finish typing, or advance page. */
   advance() {
     if (this.typing) {
       this.timer?.remove();
       this.typing = false;
-      this.bodyText.setText(this.lines[this.lineIndex].text);
+      this.bodyText.setText(this.pages[this.pageIndex].text);
       return;
     }
-    this.lineIndex++;
-    if (this.lineIndex >= this.lines.length) {
+    this.pageIndex++;
+    if (this.pageIndex >= this.pages.length) {
       this.container.setVisible(false);
       this.onComplete?.();
     } else {
-      this.showLine();
+      this.showPage();
     }
   }
 
-  private showLine() {
-    const line = this.lines[this.lineIndex];
-    this.nameText.setText(line.speaker);
+  private showPage() {
+    const page = this.pages[this.pageIndex];
+    this.nameText.setText(page.speaker);
     this.bodyText.setText("");
     this.charIndex = 0;
     this.typing = true;
     this.timer = this.scene.time.addEvent({
       delay: TICK_MS,
-      repeat: line.text.length - 1,
+      repeat: page.text.length - 1,
       callback: () => {
         this.charIndex += CHARS_PER_TICK;
-        this.bodyText.setText(line.text.slice(0, this.charIndex));
-        if (this.charIndex >= line.text.length) this.typing = false;
+        this.bodyText.setText(page.text.slice(0, this.charIndex));
+        if (this.charIndex >= page.text.length) this.typing = false;
       },
     });
   }

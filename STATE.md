@@ -29,14 +29,28 @@ scripted on-enter events (`onEnter`). Story authority:
   playerTile, facing, debug) as a test hook — drive tests off state, not
   timing.
 
+## Visuals (added third iteration, 2026-06-11)
+
+Real pixel art from the CC0 "Zelda-like tilesets and sprites" pack
+(ArMM1998, OpenGameArt — see `public/assets/CREDITS.md`). Tiles map via
+`TILE_FRAMES` in `src/engine/textures.ts` (overworld sheet = 40 cols of
+16x16; frame = row*40+col). Tree canopies are 32x32 depth-sorted
+overlays; hero has 4-dir walk anims (16x32 frames, rows down/left/up/
+right); NPCs are the tinted `NPC_test.png` template — distinct colors,
+but bald placeholder figures. Seal crystal remains original generated
+art. Public server on :4173 serves `dist/` — rebuild to publish.
+
 ## Next up (in order)
 
-1. Act 1 closing beat: departure scene (talk to all three companions
+1. Per-character NPC look: either recolored character-sheet variants
+   (hair/clothes palette swap at load time) or hand-picked sprites from
+   another CC0 pack; NPC facing toward the player when talked to.
+2. Act 1 closing beat: departure scene (talk to all three companions
    after the breach → flag `act1_complete` → narration at the south
    gate). Cheap, pure data + maybe one engine touch.
-2. Real tileset + character sprites; tile ids in map JSON are stable by
-   design, so this is a texture-layer swap.
-3. Battle system design doc before any battle code (elements, Kindred).
+3. Interiors via `Inner.png` (already in the pack) — house/shrine inside
+   maps behind the arched doors.
+4. Battle system design doc before any battle code (elements, Kindred).
 
 ## Decisions made
 

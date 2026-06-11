@@ -19,17 +19,25 @@ export const TILE_FRAMES: Record<number, number> = {
   5: f(25, 14), // shingle roof
   6: f(25, 3), // arched doorway
   7: f(13, 15), // seal: cobble base, crystal drawn on top
+  8: f(25, 1), // barred gate (solid until opened)
+  9: f(13, 15), // stairs: cobble base, generated steps drawn on top
+  10: f(5, 13), // cliff face
+  11: f(13, 15), // pressure plate: cobble base, generated plate on top
 };
 
 export const TREE_TILE = 3;
 export const SEAL_TILE = 7;
+export const STAIRS_TILE = 9;
+export const PLATE_TILE = 11;
+/** Tile id that opened gates turn into. */
+export const FLOOR_TILE = 1;
 
 /** Hero walk-cycle frame ranges per direction (16x32 frames, 17 cols). */
 export const HERO_WALK: Record<string, [number, number]> = {
   down: [0, 3],
-  left: [17, 20],
+  right: [17, 20],
   up: [34, 37],
-  right: [51, 54],
+  left: [51, 54],
 };
 
 export function preloadAssets(scene: Phaser.Scene): void {
@@ -63,6 +71,50 @@ export function setupDerivedTextures(scene: Phaser.Scene): void {
     g.fillStyle(0xb08ade);
     g.fillRect(7, 4, 2, 4);
     g.generateTexture("seal_crystal", TILE_SIZE, TILE_SIZE);
+    g.destroy();
+  }
+
+  // stone steps (original): four treads with darker risers
+  if (!scene.textures.exists("stairs")) {
+    const g = scene.add.graphics();
+    g.fillStyle(0xa8a098);
+    g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+    g.fillStyle(0x6a625a);
+    for (let i = 0; i < 4; i++) g.fillRect(0, i * 4 + 3, TILE_SIZE, 1);
+    g.fillStyle(0x8a827a);
+    g.fillRect(0, 0, 1, TILE_SIZE);
+    g.fillRect(15, 0, 1, TILE_SIZE);
+    g.generateTexture("stairs", TILE_SIZE, TILE_SIZE);
+    g.destroy();
+  }
+
+  // pressure plate (original): inset stone slab
+  if (!scene.textures.exists("plate")) {
+    const g = scene.add.graphics();
+    g.fillStyle(0x55504a);
+    g.fillRect(2, 2, 12, 12);
+    g.fillStyle(0x7a746c);
+    g.fillRect(3, 3, 10, 10);
+    g.fillStyle(0x55504a);
+    g.fillRect(5, 5, 6, 6);
+    g.generateTexture("plate", TILE_SIZE, TILE_SIZE);
+    g.destroy();
+  }
+
+  // pushable stone block (original): beveled cube
+  if (!scene.textures.exists("push_block")) {
+    const g = scene.add.graphics();
+    g.fillStyle(0x4a443c);
+    g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+    g.fillStyle(0x9c8e7a);
+    g.fillRect(1, 1, 14, 14);
+    g.fillStyle(0xbcae9a);
+    g.fillRect(1, 1, 14, 3);
+    g.fillRect(1, 1, 3, 14);
+    g.fillStyle(0x7a6e5c);
+    g.fillRect(12, 4, 3, 11);
+    g.fillRect(4, 12, 11, 3);
+    g.generateTexture("push_block", TILE_SIZE, TILE_SIZE);
     g.destroy();
   }
 }

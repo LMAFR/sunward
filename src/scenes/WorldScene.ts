@@ -8,8 +8,11 @@ import type {
 } from "../engine/types";
 import { GameState } from "../engine/GameState";
 import {
+  FLOOR_TILE,
   HERO_WALK,
+  PLATE_TILE,
   SEAL_TILE,
+  STAIRS_TILE,
   TILE_FRAMES,
   TILE_SIZE,
   TREE_TILE,
@@ -45,6 +48,8 @@ export class WorldScene extends Phaser.Scene {
   private facing: Dir = "down";
   private moving = false;
   private npcs = new Map<string, NpcData>(); // keyed by "x,y"
+  private blocks = new Map<string, Phaser.GameObjects.Image>(); // keyed by "x,y"
+  private tileImages: Phaser.GameObjects.Image[][] = [];
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private interactKey!: Phaser.Input.Keyboard.Key;
   private dialogueBox!: DialogueBox;
@@ -62,6 +67,8 @@ export class WorldScene extends Phaser.Scene {
         : undefined;
     // scene restarts reuse this instance; reset per-map state
     this.npcs.clear();
+    this.blocks.clear();
+    this.tileImages = [];
     this.moving = false;
     this.facing = "down";
   }
@@ -75,16 +82,26 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create() {
-    this.map = this.cache.json.get(`map_${this.mapId}`) as MapData;
+    // clone: puzzles mutate tiles, and the JSON cache object is shared
+    this.map = structuredClone(
+      this.cache.json.get(`map_${this.mapId}`)
+    ) as MapData;
     this.dialogue = this.cache.json.get(`dlg_${this.mapId}`) as DialogueFile;
     setupDerivedTextures(this);
     this.createAnims();
 
-    // tiles (canopies and crystals are overlays on a base tile)
+    // an already-solved puzzle starts with its gates open
+    const puzzle = this.map.puzzle;
+    if (puzzle?.solvedFlag && GameState.has(puzzle.solvedFlag)) {
+      for (const g of puzzle.gates) this.map.tiles[g.y][g.x] = FLOOR_TILE;
+    }
+
+    // tiles (canopies, crystals, steps and plates are overlays on a base)
     for (let y = 0; y < this.map.height; y++) {
+      this.tileImages[y] = [];
       for (let x = 0; x < this.map.width; x++) {
         const id = this.map.tiles[y][x];
-        this.add
+        this.tileImages[y][x] = this.add
           .image(x * TILE_SIZE, y * TILE_SIZE, "overworld", TILE_FRAMES[id])
           .setOrigin(0, 0);
         if (id === TREE_TILE) {
@@ -97,8 +114,21 @@ export class WorldScene extends Phaser.Scene {
             .image(x * TILE_SIZE, y * TILE_SIZE, "seal_crystal")
             .setOrigin(0, 0)
             .setDepth(y * TILE_SIZE);
+        } else if (id === STAIRS_TILE) {
+          this.add.image(x * TILE_SIZE, y * TILE_SIZE, "stairs").setOrigin(0, 0);
+        } else if (id === PLATE_TILE) {
+          this.add.image(x * TILE_SIZE, y * TILE_SIZE, "plate").setOrigin(0, 0);
         }
       }
+    }
+
+    // pushable blocks
+    for (const b of this.map.blocks ?? []) {
+      const img = this.add
+        .image(b.x * TILE_SIZE, b.y * TILE_SIZE, "push_block")
+        .setOrigin(0, 0)
+        .setDepth(b.y * TILE_SIZE);
+      this.blocks.set(`${b.x},${b.y}`, img);
     }
 
     // npcs (tinted template until real per-character sprites exist)
@@ -151,6 +181,8 @@ export class WorldScene extends Phaser.Scene {
       isDialogueActive: () => this.dialogueBox.active,
       playerTile: () => ({ ...this.playerTile }),
       facing: () => this.facing,
+      tileAt: (x: number, y: number) => this.map.tiles[y]?.[x],
+      blocks: () => [...this.blocks.keys()],
       debug: () => ({ ...this.debugInfo, zIsDown: this.interactKey.isDown }),
     };
   }
@@ -207,6 +239,10 @@ export class WorldScene extends Phaser.Scene {
       return;
     if (this.map.solidTiles.includes(this.map.tiles[ny][nx])) return;
     if (this.npcs.has(`${nx},${ny}`)) return;
+    if (this.blocks.has(`${nx},${ny}`)) {
+      this.tryPush(nx, ny, dx, dy);
+      return;
+    }
 
     this.moving = true;
     this.playerTile = { x: nx, y: ny };
@@ -220,6 +256,45 @@ export class WorldScene extends Phaser.Scene {
         this.checkTriggers();
       },
     });
+  }
+
+  private tryPush(bx: number, by: number, dx: number, dy: number) {
+    const tx = bx + dx;
+    const ty = by + dy;
+    if (tx < 0 || ty < 0 || tx >= this.map.width || ty >= this.map.height)
+      return;
+    if (this.map.solidTiles.includes(this.map.tiles[ty][tx])) return;
+    if (this.npcs.has(`${tx},${ty}`)) return;
+    if (this.blocks.has(`${tx},${ty}`)) return;
+
+    const img = this.blocks.get(`${bx},${by}`)!;
+    this.blocks.delete(`${bx},${by}`);
+    this.blocks.set(`${tx},${ty}`, img);
+    this.moving = true;
+    this.tweens.add({
+      targets: img,
+      x: tx * TILE_SIZE,
+      y: ty * TILE_SIZE,
+      duration: MOVE_MS,
+      onComplete: () => {
+        img.setDepth(ty * TILE_SIZE);
+        this.moving = false;
+        this.checkPlates();
+      },
+    });
+  }
+
+  private checkPlates() {
+    const puzzle = this.map.puzzle;
+    if (!puzzle) return;
+    if (puzzle.solvedFlag && GameState.has(puzzle.solvedFlag)) return;
+    const solved = puzzle.plates.every((p) => this.blocks.has(`${p.x},${p.y}`));
+    if (!solved) return;
+    for (const g of puzzle.gates) {
+      this.map.tiles[g.y][g.x] = FLOOR_TILE;
+      this.tileImages[g.y][g.x].setFrame(TILE_FRAMES[FLOOR_TILE]);
+    }
+    if (puzzle.solvedFlag) GameState.set(puzzle.solvedFlag);
   }
 
   private checkTriggers() {
