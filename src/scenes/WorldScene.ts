@@ -21,6 +21,7 @@ import {
   setupDerivedTextures,
 } from "../engine/textures";
 import { DialogueBox } from "../ui/DialogueBox";
+import { VirtualControls } from "../ui/VirtualControls";
 
 const START_MAP = "aldera-village";
 const MOVE_MS = 160; // GS-like walk speed feel
@@ -54,6 +55,8 @@ export class WorldScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private interactKey!: Phaser.Input.Keyboard.Key;
   private dialogueBox!: DialogueBox;
+  private virtual?: VirtualControls;
+  private queuedInteract = false;
   private debugInfo: Record<string, unknown> = {};
 
   constructor() {
@@ -186,6 +189,22 @@ export class WorldScene extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.Z
     );
     this.dialogueBox = new DialogueBox(this);
+    this.queuedInteract = false;
+
+    // touch controls + tap-anywhere to advance dialogue
+    if (this.sys.game.device.input.touch) {
+      this.virtual = new VirtualControls(this, () => {
+        if (this.dialogueBox.active) this.dialogueBox.advance();
+        else this.queuedInteract = true;
+      });
+      this.input.on(
+        "pointerdown",
+        (_p: Phaser.Input.Pointer, over: unknown[]) => {
+          if (over.length === 0 && this.dialogueBox.active)
+            this.dialogueBox.advance();
+        }
+      );
+    }
 
     this.add
       .text(4, 4, this.map.name, {
@@ -226,7 +245,9 @@ export class WorldScene extends Phaser.Scene {
   }
 
   update() {
-    if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+    const touchInteract = this.queuedInteract;
+    this.queuedInteract = false;
+    if (Phaser.Input.Keyboard.JustDown(this.interactKey) || touchInteract) {
       this.debugInfo.zPresses = ((this.debugInfo.zPresses as number) ?? 0) + 1;
       if (this.dialogueBox.active) {
         this.dialogueBox.advance();
@@ -241,6 +262,7 @@ export class WorldScene extends Phaser.Scene {
       else if (this.cursors.down.isDown) dir = "down";
       else if (this.cursors.left.isDown) dir = "left";
       else if (this.cursors.right.isDown) dir = "right";
+      else if (this.virtual) dir = this.virtual.dir ?? this.virtual.consumeStep();
     }
     if (dir) {
       this.tryMove(dir);
