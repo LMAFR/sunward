@@ -1,0 +1,26 @@
+{
+  "elder_intro": [
+    {
+      "speaker": "Elder Thane",
+      "text": "You feel it too, don't you? The mountain has been restless since the last storm."
+    },
+    {
+      "speaker": "Elder Thane",
+      "text": "When I was your age, the lights above the peak meant festival season. Now nobody remembers what they meant before that."
+    },
+    {
+      "speaker": "Elder Thane",
+      "text": "Go on, then. But take the path. The woods keep their own counsel these days."
+    }
+  ],
+  "kid_pond": [
+    {
+      "speaker": "Pell",
+      "text": "I saw a fish made of light in the pond yesterday! Nobody believes me."
+    },
+    {
+      "speaker": "Pell",
+      "text": "...You believe me, right?"
+    }
+  ]
+}
