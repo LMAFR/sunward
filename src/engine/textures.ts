@@ -15,6 +15,7 @@ export const TILE_DEFS: { name: string; base: number; accent: number }[] = [
   { name: "wall", base: 0x8a8a8a, accent: 0x767676 },
   { name: "roof", base: 0xa0522d, accent: 0x8b4513 },
   { name: "door", base: 0x5c3a1e, accent: 0x4a2f18 },
+  { name: "seal", base: 0x4a2a5a, accent: 0x6a3a7a },
 ];
 
 /** Generate flat-color placeholder textures so the slice needs zero asset files. */

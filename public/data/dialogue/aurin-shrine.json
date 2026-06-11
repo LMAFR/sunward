@@ -1,0 +1,30 @@
+{
+  "seal_broken": [
+    {
+      "speaker": "—",
+      "text": "The shrine doors stand open. No guard broke them — the stone itself has been cut, clean as bread."
+    },
+    {
+      "speaker": "Maester Edrin",
+      "text": "The seal... this took knowledge, not force. Three stones gone. Three."
+    },
+    {
+      "speaker": "—",
+      "text": "In the dust of the inner floor: five sets of tracks, a day old. One of them favors the left foot."
+    }
+  ],
+  "warden_first": [
+    {
+      "speaker": "The Warden",
+      "text": "You come late, earth-child. The mountain counted on no one — and was right to."
+    },
+    {
+      "speaker": "The Warden",
+      "text": "Three seeds of ruin walk north. The fourth sleeps before you. Keep it sleeping, or carry it — both have a price. I will not tell you which is greater."
+    },
+    {
+      "speaker": "—",
+      "text": "The stone falls silent. You are no longer certain it spoke at all."
+    }
+  ]
+}

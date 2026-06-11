@@ -11,10 +11,14 @@ export interface MapData {
   height: number; // in tiles
   /** Tile grid, row-major. Values index into TILE_DEFS. */
   tiles: number[][];
-  /** Tiles the player cannot walk onto (tile ids). */
+  /** Tiles the player cannot walk onto (tile ids), per map. */
   solidTiles: number[];
   playerStart: { x: number; y: number };
   npcs: NpcData[];
+  /** Stepping onto (x,y) transitions to another map. */
+  triggers?: TriggerData[];
+  /** Scripted dialogue on entering the map; first matching event runs. */
+  onEnter?: OnEnterEvent[];
 }
 
 export interface NpcData {
@@ -28,11 +32,45 @@ export interface NpcData {
   color: number;
 }
 
-export interface DialogueFile {
-  [dialogueId: string]: DialogueLine[];
+export interface TriggerData {
+  x: number;
+  y: number;
+  /** Map id to load. */
+  target: string;
+  /** Player spawn tile in the target map. Must not be a trigger tile. */
+  targetX: number;
+  targetY: number;
+}
+
+/** Condition over story flags: all of `if` set, none of `unless` set. */
+export interface FlagCondition {
+  if?: string[];
+  unless?: string[];
+}
+
+export interface OnEnterEvent extends FlagCondition {
+  dialogueId: string;
+  /** Flags set when the dialogue completes. */
+  set?: string[];
 }
 
 export interface DialogueLine {
   speaker: string;
   text: string;
+}
+
+export interface DialogueVariant extends FlagCondition {
+  lines: DialogueLine[];
+  /** Flags set when the dialogue completes. */
+  set?: string[];
+}
+
+/**
+ * A dialogue entry is either a plain line array (unconditional) or a
+ * variant list — the first variant whose condition matches is used.
+ */
+export type DialogueEntry = DialogueLine[] | { variants: DialogueVariant[] };
+
+export interface DialogueFile {
+  [dialogueId: string]: DialogueEntry;
 }

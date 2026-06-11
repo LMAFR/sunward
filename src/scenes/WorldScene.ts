@@ -1,5 +1,12 @@
 import Phaser from "phaser";
-import type { DialogueFile, MapData, NpcData } from "../engine/types";
+import type {
+  DialogueEntry,
+  DialogueFile,
+  DialogueLine,
+  MapData,
+  NpcData,
+} from "../engine/types";
+import { GameState } from "../engine/GameState";
 import {
   TILE_SIZE,
   generateActorTexture,
@@ -7,7 +14,8 @@ import {
 } from "../engine/textures";
 import { DialogueBox } from "../ui/DialogueBox";
 
-const MOVE_MS = 160; // GS walk speed feel
+const START_MAP = "aldera-village";
+const MOVE_MS = 160; // GS-like walk speed feel
 
 type Dir = "up" | "down" | "left" | "right";
 const DIR_DELTA: Record<Dir, { dx: number; dy: number }> = {
@@ -17,7 +25,15 @@ const DIR_DELTA: Record<Dir, { dx: number; dy: number }> = {
   right: { dx: 1, dy: 0 },
 };
 
+interface SceneData {
+  mapId?: string;
+  startX?: number;
+  startY?: number;
+}
+
 export class WorldScene extends Phaser.Scene {
+  private mapId = START_MAP;
+  private startOverride?: { x: number; y: number };
   private map!: MapData;
   private dialogue!: DialogueFile;
   private player!: Phaser.GameObjects.Sprite;
@@ -28,20 +44,34 @@ export class WorldScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private interactKey!: Phaser.Input.Keyboard.Key;
   private dialogueBox!: DialogueBox;
+  private debugInfo: Record<string, unknown> = {};
 
   constructor() {
     super("world");
   }
 
+  init(data: SceneData) {
+    this.mapId = data.mapId ?? START_MAP;
+    this.startOverride =
+      data.startX !== undefined && data.startY !== undefined
+        ? { x: data.startX, y: data.startY }
+        : undefined;
+    // scene restarts reuse this instance; reset per-map state
+    this.npcs.clear();
+    this.moving = false;
+    this.facing = "down";
+  }
+
   preload() {
-    const mapId = "vale-outskirts";
-    this.load.json("map", `data/maps/${mapId}.json`);
-    this.load.json("dialogue", `data/dialogue/${mapId}.json`);
+    if (!this.cache.json.exists(`map_${this.mapId}`)) {
+      this.load.json(`map_${this.mapId}`, `data/maps/${this.mapId}.json`);
+      this.load.json(`dlg_${this.mapId}`, `data/dialogue/${this.mapId}.json`);
+    }
   }
 
   create() {
-    this.map = this.cache.json.get("map") as MapData;
-    this.dialogue = this.cache.json.get("dialogue") as DialogueFile;
+    this.map = this.cache.json.get(`map_${this.mapId}`) as MapData;
+    this.dialogue = this.cache.json.get(`dlg_${this.mapId}`) as DialogueFile;
     generateTextures(this);
 
     // tiles
@@ -64,7 +94,7 @@ export class WorldScene extends Phaser.Scene {
 
     // player
     generateActorTexture(this, "actor_player", 0x3a5fcd);
-    this.playerTile = { ...this.map.playerStart };
+    this.playerTile = this.startOverride ?? { ...this.map.playerStart };
     this.player = this.add
       .sprite(
         this.playerTile.x * TILE_SIZE,
@@ -86,7 +116,7 @@ export class WorldScene extends Phaser.Scene {
     this.dialogueBox = new DialogueBox(this);
 
     this.add
-      .text(4, 4, "Arrows: move   Z: talk", {
+      .text(4, 4, this.map.name, {
         fontFamily: "monospace",
         fontSize: "8px",
         color: "#ffffff",
@@ -94,10 +124,22 @@ export class WorldScene extends Phaser.Scene {
       })
       .setScrollFactor(0)
       .setDepth(50);
+
+    this.runOnEnter();
+
+    // test hook: lets the headless smoke test observe game state
+    (window as unknown as { __sunward?: object }).__sunward = {
+      mapId: this.mapId,
+      isDialogueActive: () => this.dialogueBox.active,
+      playerTile: () => ({ ...this.playerTile }),
+      facing: () => this.facing,
+      debug: () => ({ ...this.debugInfo, zIsDown: this.interactKey.isDown }),
+    };
   }
 
   update() {
     if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+      this.debugInfo.zPresses = ((this.debugInfo.zPresses as number) ?? 0) + 1;
       if (this.dialogueBox.active) {
         this.dialogueBox.advance();
       } else {
@@ -133,8 +175,29 @@ export class WorldScene extends Phaser.Scene {
       duration: MOVE_MS,
       onComplete: () => {
         this.moving = false;
+        this.checkTriggers();
       },
     });
+  }
+
+  private checkTriggers() {
+    const t = this.map.triggers?.find(
+      (t) => t.x === this.playerTile.x && t.y === this.playerTile.y
+    );
+    if (!t) return;
+    this.scene.restart({
+      mapId: t.target,
+      startX: t.targetX,
+      startY: t.targetY,
+    } satisfies SceneData);
+  }
+
+  private runOnEnter() {
+    const event = this.map.onEnter?.find((e) => GameState.check(e));
+    if (!event) return;
+    const lines = this.resolveLines(this.dialogue[event.dialogueId]);
+    if (!lines) return;
+    this.dialogueBox.start(lines, () => GameState.setAll(event.set));
   }
 
   private tryInteract() {
@@ -142,12 +205,29 @@ export class WorldScene extends Phaser.Scene {
     const tx = this.playerTile.x + dx;
     const ty = this.playerTile.y + dy;
     const npc = this.npcs.get(`${tx},${ty}`);
+    Object.assign(this.debugInfo, {
+      interactAt: `${tx},${ty}`,
+      npcFound: npc?.id ?? null,
+      npcKeys: [...this.npcs.keys()],
+    });
     if (!npc) return;
-    const lines = this.dialogue[npc.dialogueId];
-    if (!lines) {
+    const entry = this.dialogue[npc.dialogueId];
+    if (!entry) {
       console.warn(`NPC ${npc.id} references missing dialogue ${npc.dialogueId}`);
       return;
     }
-    this.dialogueBox.start(lines);
+    if (Array.isArray(entry)) {
+      this.dialogueBox.start(entry);
+      return;
+    }
+    const variant = entry.variants.find((v) => GameState.check(v));
+    if (!variant) return;
+    this.dialogueBox.start(variant.lines, () => GameState.setAll(variant.set));
+  }
+
+  private resolveLines(entry: DialogueEntry | undefined): DialogueLine[] | null {
+    if (!entry) return null;
+    if (Array.isArray(entry)) return entry;
+    return entry.variants.find((v) => GameState.check(v))?.lines ?? null;
   }
 }

@@ -1,35 +1,49 @@
 # STATE — resume notes
 
-Updated: 2026-06-11
+Updated: 2026-06-11 (second iteration)
 
 ## Current state
 
-Vertical slice v0: boots in browser at 240×160×3, one map
-(`vale-outskirts`), grid movement with collision, two NPCs with
-JSON-driven dialogue, GS-style typewriter box. Build green
-(`npm run build`), headless smoke test green with screenshot proof
-(`scripts/smoke.png`).
+Act 1 opening is playable: boot into Aldera Village (opening narration),
+quest from Elder Thane, south gate → Aldera Outskirts, east path → Aurin
+Shrine (breach scene fires on entry, sets `shrine_breached`), the Warden
+talks, and all four village NPCs have post-breach dialogue variants.
+Build green; smoke test verifies elder dialogue + a map transition with
+screenshots (`scripts/smoke.png`, `scripts/smoke-outskirts.png`).
+
+Engine features: map transitions (`triggers`), story flags (`GameState`),
+conditional dialogue (`variants` with `if`/`unless`, `set` on complete),
+scripted on-enter events (`onEnter`). Story authority:
+`docs/story/story-bible.md` (cast/glossary/beats/writing rules).
 
 ## Environment notes
 
-- Headless Chromium on this VPS needs `libnss3`/`libnspr4`, which are NOT
-  installed system-wide (no passwordless sudo). They are extracted to
-  `~/.local/chromium-libs/usr/lib/x86_64-linux-gnu` — pass via
-  `LD_LIBRARY_PATH` (see README "Verify" section for the full command).
-- Browser binary: Playwright cache
-  `~/.cache/ms-playwright/chromium_headless_shell-1208/`.
+- Headless Chromium libs (`libnss3`/`libnspr4`) extracted to
+  `~/.local/chromium-libs/...` — pass via `LD_LIBRARY_PATH` (full command
+  in README "Verify").
+- **Playwright gotcha:** instantaneous `keyboard.press()` is dropped by
+  Phaser in the headless render loop — always hold keys (down → ~100ms →
+  up). `scripts/debug-keys.mjs` is the diagnostic harness for input
+  issues.
+- The scene exposes `window.__sunward` (mapId, isDialogueActive,
+  playerTile, facing, debug) as a test hook — drive tests off state, not
+  timing.
 
 ## Next up (in order)
 
-1. Map transitions: a `triggers` array in map JSON (`door`, `edge` types)
-   that loads another map. Requires a second map to test against.
-2. NPC facing + simple walk animation once real sprites land.
-3. Pick a free GBA-style tileset (Time Fantasy-like or generated) and map
-   tile ids onto it — tile ids in map JSON are stable by design.
+1. Act 1 closing beat: departure scene (talk to all three companions
+   after the breach → flag `act1_complete` → narration at the south
+   gate). Cheap, pure data + maybe one engine touch.
+2. Real tileset + character sprites; tile ids in map JSON are stable by
+   design, so this is a texture-layer swap.
+3. Battle system design doc before any battle code (elements, Kindred).
 
 ## Decisions made
 
 - Web (Vite + TS + Phaser 3) over Godot — shareability (2026-06-11).
-- Original content only, no Nintendo/Camelot assets — legal shareability.
-- Model economy: user runs Sonnet for implementation sessions, Fable/Opus
-  for architecture/narrative-heavy sessions.
+- Original content only — names/prose/assets never Nintendo/Camelot's;
+  GS1 *beat structure* as temporary scaffolding, drift is the goal.
+- Inherited the six character theses from the ROM-hack vault as canon
+  (sick genius, weathered brother, the Test, etc.) — see story bible.
+- Model economy: Sonnet for implementation, Fable/Opus for
+  architecture/narrative sessions.

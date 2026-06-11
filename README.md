@@ -43,12 +43,20 @@ npm run build    # type-check + bundle
   node scripts/smoke.mjs; pkill -f "vite preview"
 ```
 
+## Story
+
+`docs/story/story-bible.md` is the naming and structure authority: cast,
+glossary, act beats, writing rules. The story follows Golden Sun 1's beat
+*structure* as scaffolding with entirely original names, prose, and
+characters, and will progressively diverge from it.
+
 ## Roadmap (vertical slice → game)
 
 1. ✅ Walkable map, NPCs, data-driven dialogue
-2. Map transitions (doors, edges) + multi-map world
-3. Real tileset + character sprites (free/original assets), facing animations
-4. Turn-based battle system (elements, spirits — the Djinn-inspired layer)
-5. Event/cutscene scripting in data (flags, conditional dialogue)
-6. Save/load (localStorage)
-7. Story content at scale
+2. ✅ Map transitions + story flags + conditional dialogue + on-enter events
+3. ✅ Act 1 opening playable (village → outskirts → shrine, breach scene)
+4. Real tileset + character sprites (free/original assets), facing animations
+5. Turn-based battle system (elements, Kindred — the spirit layer)
+6. Party members follow + richer cutscene scripting (movement, music)
+7. Save/load (localStorage)
+8. Story content at scale

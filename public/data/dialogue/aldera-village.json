@@ -1,0 +1,146 @@
+{
+  "intro_narration": [
+    {
+      "speaker": "—",
+      "text": "Aldera, in the shadow of Mount Aurin. Three years since the storm took the east bank — and Caled with it."
+    },
+    {
+      "speaker": "—",
+      "text": "The mountain has been glowing at night again. Nobody says so out loud."
+    }
+  ],
+  "elder_quest": {
+    "variants": [
+      {
+        "if": ["shrine_breached"],
+        "lines": [
+          {
+            "speaker": "Elder Thane",
+            "text": "Three stones gone, and my village still standing under a waking mountain. I do not know which of those facts to trust."
+          },
+          {
+            "speaker": "Elder Thane",
+            "text": "Whoever they were, they knew the wards better than Edrin does. That frightens me more than the theft."
+          },
+          {
+            "speaker": "Elder Thane",
+            "text": "Rest tonight. Tomorrow we speak of who follows them."
+          }
+        ]
+      },
+      {
+        "if": ["quest_shrine"],
+        "lines": [
+          {
+            "speaker": "Elder Thane",
+            "text": "The shrine path is east, past the old pond. Edrin will talk your ear off — let him. He notices what others miss."
+          }
+        ]
+      },
+      {
+        "lines": [
+          {
+            "speaker": "Elder Thane",
+            "text": "Aren. Good — I was about to send for you."
+          },
+          {
+            "speaker": "Elder Thane",
+            "text": "Maester Edrin means to climb to the Aurin Shrine and read the wards. After last night's lights, I will not let him go alone."
+          },
+          {
+            "speaker": "Elder Thane",
+            "text": "Take Bram, if you can pry him from the forge. The east path, past the pond. Go carefully."
+          }
+        ],
+        "set": ["quest_shrine"]
+      }
+    ]
+  },
+  "bram_talk": {
+    "variants": [
+      {
+        "if": ["shrine_breached"],
+        "lines": [
+          {
+            "speaker": "Bram",
+            "text": "Someone broke a seal that held for centuries, and we were a day late. A day!"
+          },
+          {
+            "speaker": "Bram",
+            "text": "I'm coming with you. Don't even start."
+          }
+        ]
+      },
+      {
+        "lines": [
+          {
+            "speaker": "Bram",
+            "text": "The elder's sending you up the mountain? And I hear it from you, not from him?"
+          },
+          {
+            "speaker": "Bram",
+            "text": "Fine. I'll get my gear. You're not doing this without me."
+          }
+        ]
+      }
+    ]
+  },
+  "liora_talk": {
+    "variants": [
+      {
+        "if": ["shrine_breached"],
+        "lines": [
+          {
+            "speaker": "Liora",
+            "text": "Tracks, Edrin said. Five sets. One of them dragging the left foot. Aren — Caled walked like that, after the rockfall year."
+          },
+          {
+            "speaker": "Liora",
+            "text": "Don't look at me like that. I'm not grieving him twice. If he's alive, I'm going with you."
+          }
+        ]
+      },
+      {
+        "lines": [
+          {
+            "speaker": "Liora",
+            "text": "Mother lit a candle for Caled again last night. Three years, and she still sets his place at the table."
+          },
+          {
+            "speaker": "Liora",
+            "text": "I've stopped telling her to stop."
+          }
+        ]
+      }
+    ]
+  },
+  "edrin_talk": {
+    "variants": [
+      {
+        "if": ["shrine_breached"],
+        "lines": [
+          {
+            "speaker": "Maester Edrin",
+            "text": "Four sockets. Three empty. The earth stone untouched — passed over, or left on purpose? The difference matters enormously."
+          },
+          {
+            "speaker": "Maester Edrin",
+            "text": "I catalogued those wards for thirty years and never once asked who else might be reading my notes. That question will keep me up tonight."
+          }
+        ]
+      },
+      {
+        "lines": [
+          {
+            "speaker": "Maester Edrin",
+            "text": "The lights above the peak follow a pattern, you know. Brighter on the ninth night. Nobody else counts."
+          },
+          {
+            "speaker": "Maester Edrin",
+            "text": "When the elder gives the word, we climb. I have waited half my life to stand inside that shrine."
+          }
+        ]
+      }
+    ]
+  }
+}
