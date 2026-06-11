@@ -37,7 +37,7 @@
   ],
   "triggers": [
     { "x": 9, "y": 0, "target": "aldera-village", "targetX": 11, "targetY": 13 },
-    { "x": 16, "y": 3, "target": "aurin-shrine", "targetX": 7, "targetY": 20 },
-    { "x": 17, "y": 3, "target": "aurin-shrine", "targetX": 7, "targetY": 20 }
+    { "x": 16, "y": 3, "target": "aurin-approach", "targetX": 7, "targetY": 8 },
+    { "x": 17, "y": 3, "target": "aurin-approach", "targetX": 7, "targetY": 8 }
   ]
 }

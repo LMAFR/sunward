@@ -100,6 +100,13 @@ await step("ArrowDown", 6); // (9,1) -> (9,7) on the crossroads
 await step("ArrowRight", 7); // -> stairs (13,7) -> terrace (16,7)
 await step("ArrowUp", 4); // -> shrine door (16,3), triggers transition
 await page.waitForTimeout(800);
+const approachId = await state.mapId();
+if (approachId !== "aurin-approach")
+  await fail(`expected map aurin-approach — got ${approachId}`);
+await clearDialogue(); // approach narration
+await page.screenshot({ path: "scripts/smoke-approach.png" });
+await step("ArrowUp", 6); // (7,8) -> shrine doors (7,2)
+await page.waitForTimeout(800);
 const shrineId = await state.mapId();
 if (shrineId !== "aurin-shrine")
   await fail(`expected map aurin-shrine — got ${shrineId}`);

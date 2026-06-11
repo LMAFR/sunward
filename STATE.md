@@ -55,6 +55,20 @@ User feedback fixed this iteration: hero left/right walk rows were
 swapped (moonwalk); dialogue box now depth 10000 + paginates long text
 (3 wrapped lines per page).
 
+## Fifth iteration (2026-06-11, same day)
+
+User feedback: stairs looked rotated (fixed — stairs_h/stairs_v split,
+risers perpendicular to climb), terrace cliff didn't enclose the upper
+level (fixed — closed polygon, stairs are the only way up), shrine
+facade looked like a house (fixed — new `props` map feature placing
+multi-tile sheet structures; stone arched entrance on the terrace,
+guardian statues flanking the trial gate inside). Props: `props:
+[{sheet: [px,py,w,h], x, y, dx?, dy?}]` — depth = base row.
+
+User direction: aesthetics should keep moving from "Pokemon-like"
+toward Golden Sun's denser, warmer look — more elevation play,
+stonework, ornament. Bear this in mind for every new map.
+
 ## Next up (in order)
 
 1. Battle system design doc, then implementation (elements, Kindred) —

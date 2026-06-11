@@ -50,7 +50,7 @@
     }
   ],
   "triggers": [
-    { "x": 7, "y": 21, "target": "aldera-outskirts", "targetX": 16, "targetY": 4 }
+    { "x": 7, "y": 21, "target": "aurin-approach", "targetX": 7, "targetY": 3 }
   ],
   "onEnter": [
     { "unless": ["shrine_seen"], "dialogueId": "seal_broken", "set": ["shrine_seen", "shrine_breached"] }

@@ -1,0 +1,35 @@
+{
+  "id": "aurin-approach",
+  "name": "Shrine Approach",
+  "width": 16,
+  "height": 10,
+  "solidTiles": [3, 4, 10],
+  "playerStart": { "x": 7, "y": 8 },
+  "tiles": [
+    [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],
+    [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],
+    [4,4,4,4,4,4,4,1,1,4,4,4,4,4,4,4],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [3,3,3,3,3,3,3,1,1,3,3,3,3,3,3,3]
+  ],
+  "props": [
+    { "sheet": [64, 496, 56, 64], "x": 6, "y": 0 },
+    { "sheet": [128, 496, 40, 48], "x": 2, "y": 1, "dx": 4 },
+    { "sheet": [128, 496, 40, 48], "x": 11, "y": 1, "dx": 4 }
+  ],
+  "npcs": [],
+  "triggers": [
+    { "x": 7, "y": 2, "target": "aurin-shrine", "targetX": 7, "targetY": 20 },
+    { "x": 8, "y": 2, "target": "aurin-shrine", "targetX": 7, "targetY": 20 },
+    { "x": 7, "y": 9, "target": "aldera-outskirts", "targetX": 16, "targetY": 4 },
+    { "x": 8, "y": 9, "target": "aldera-outskirts", "targetX": 16, "targetY": 4 }
+  ],
+  "onEnter": [
+    { "unless": ["approach_seen"], "dialogueId": "approach_narration", "set": ["approach_seen"] }
+  ]
+}
