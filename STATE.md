@@ -62,7 +62,7 @@ risers perpendicular to climb), terrace cliff didn't enclose the upper
 level (fixed — closed polygon, stairs are the only way up), shrine
 facade looked like a house (fixed — new `props` map feature placing
 multi-tile sheet structures; stone arched entrance on the terrace,
-guardian statues flanking the trial gate inside). Props: `props:
+guardian statues flanking the trial gate inside; sixth pass added the aurin-approach map so the facade sits in a full-width stone wall, GS-style). Props: `props:
 [{sheet: [px,py,w,h], x, y, dx?, dy?}]` — depth = base row.
 
 User direction: aesthetics should keep moving from "Pokemon-like"
