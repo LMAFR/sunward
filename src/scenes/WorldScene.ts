@@ -8,9 +8,13 @@ import type {
 } from "../engine/types";
 import { GameState } from "../engine/GameState";
 import {
+  HERO_WALK,
+  SEAL_TILE,
+  TILE_FRAMES,
   TILE_SIZE,
-  generateActorTexture,
-  generateTextures,
+  TREE_TILE,
+  preloadAssets,
+  setupDerivedTextures,
 } from "../engine/textures";
 import { DialogueBox } from "../ui/DialogueBox";
 
@@ -63,6 +67,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   preload() {
+    preloadAssets(this);
     if (!this.cache.json.exists(`map_${this.mapId}`)) {
       this.load.json(`map_${this.mapId}`, `data/maps/${this.mapId}.json`);
       this.load.json(`dlg_${this.mapId}`, `data/dialogue/${this.mapId}.json`);
@@ -72,37 +77,50 @@ export class WorldScene extends Phaser.Scene {
   create() {
     this.map = this.cache.json.get(`map_${this.mapId}`) as MapData;
     this.dialogue = this.cache.json.get(`dlg_${this.mapId}`) as DialogueFile;
-    generateTextures(this);
+    setupDerivedTextures(this);
+    this.createAnims();
 
-    // tiles
+    // tiles (canopies and crystals are overlays on a base tile)
     for (let y = 0; y < this.map.height; y++) {
       for (let x = 0; x < this.map.width; x++) {
+        const id = this.map.tiles[y][x];
         this.add
-          .image(x * TILE_SIZE, y * TILE_SIZE, `tile_${this.map.tiles[y][x]}`)
+          .image(x * TILE_SIZE, y * TILE_SIZE, "overworld", TILE_FRAMES[id])
           .setOrigin(0, 0);
+        if (id === TREE_TILE) {
+          this.add
+            .image(x * TILE_SIZE - 8, y * TILE_SIZE - 16, "overworld", "tree")
+            .setOrigin(0, 0)
+            .setDepth(y * TILE_SIZE + 8);
+        } else if (id === SEAL_TILE) {
+          this.add
+            .image(x * TILE_SIZE, y * TILE_SIZE, "seal_crystal")
+            .setOrigin(0, 0)
+            .setDepth(y * TILE_SIZE);
+        }
       }
     }
 
-    // npcs
+    // npcs (tinted template until real per-character sprites exist)
     for (const npc of this.map.npcs) {
-      generateActorTexture(this, `actor_${npc.id}`, npc.color);
       this.add
-        .sprite(npc.x * TILE_SIZE, npc.y * TILE_SIZE, `actor_${npc.id}`)
-        .setOrigin(0, 0);
+        .sprite(npc.x * TILE_SIZE, npc.y * TILE_SIZE - 16, "npc", 0)
+        .setOrigin(0, 0)
+        .setTint(npc.color)
+        .setDepth(npc.y * TILE_SIZE);
       this.npcs.set(`${npc.x},${npc.y}`, npc);
     }
 
     // player
-    generateActorTexture(this, "actor_player", 0x3a5fcd);
     this.playerTile = this.startOverride ?? { ...this.map.playerStart };
     this.player = this.add
       .sprite(
         this.playerTile.x * TILE_SIZE,
-        this.playerTile.y * TILE_SIZE,
-        "actor_player"
+        this.playerTile.y * TILE_SIZE - 16,
+        "hero",
+        HERO_WALK.down[0]
       )
       .setOrigin(0, 0);
-    this.player.setDepth(10);
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, this.map.width * TILE_SIZE, this.map.height * TILE_SIZE);
@@ -137,6 +155,20 @@ export class WorldScene extends Phaser.Scene {
     };
   }
 
+  private createAnims() {
+    for (const dir of ["down", "left", "up", "right"] as const) {
+      const key = `walk-${dir}`;
+      if (this.anims.exists(key)) continue;
+      const [start, end] = HERO_WALK[dir];
+      this.anims.create({
+        key,
+        frames: this.anims.generateFrameNumbers("hero", { start, end }),
+        frameRate: 10,
+        repeat: -1,
+      });
+    }
+  }
+
   update() {
     if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
       this.debugInfo.zPresses = ((this.debugInfo.zPresses as number) ?? 0) + 1;
@@ -146,18 +178,28 @@ export class WorldScene extends Phaser.Scene {
         this.tryInteract();
       }
     }
-    if (this.dialogueBox.active || this.moving) return;
 
     let dir: Dir | null = null;
-    if (this.cursors.up.isDown) dir = "up";
-    else if (this.cursors.down.isDown) dir = "down";
-    else if (this.cursors.left.isDown) dir = "left";
-    else if (this.cursors.right.isDown) dir = "right";
-    if (dir) this.tryMove(dir);
+    if (!this.dialogueBox.active && !this.moving) {
+      if (this.cursors.up.isDown) dir = "up";
+      else if (this.cursors.down.isDown) dir = "down";
+      else if (this.cursors.left.isDown) dir = "left";
+      else if (this.cursors.right.isDown) dir = "right";
+    }
+    if (dir) {
+      this.tryMove(dir);
+    } else if (!this.moving && this.player.anims.isPlaying) {
+      this.player.anims.stop();
+      this.player.setFrame(HERO_WALK[this.facing][0]);
+    }
+
+    // actors sort by feet position so canopies overlap correctly
+    this.player.setDepth(this.player.y + 16);
   }
 
   private tryMove(dir: Dir) {
     this.facing = dir;
+    this.player.anims.play(`walk-${dir}`, true);
     const { dx, dy } = DIR_DELTA[dir];
     const nx = this.playerTile.x + dx;
     const ny = this.playerTile.y + dy;
@@ -171,7 +213,7 @@ export class WorldScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.player,
       x: nx * TILE_SIZE,
-      y: ny * TILE_SIZE,
+      y: ny * TILE_SIZE - 16,
       duration: MOVE_MS,
       onComplete: () => {
         this.moving = false;
@@ -208,7 +250,6 @@ export class WorldScene extends Phaser.Scene {
     Object.assign(this.debugInfo, {
       interactAt: `${tx},${ty}`,
       npcFound: npc?.id ?? null,
-      npcKeys: [...this.npcs.keys()],
     });
     if (!npc) return;
     const entry = this.dialogue[npc.dialogueId];
